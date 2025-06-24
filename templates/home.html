@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Panel</title>
+</head>
+<body>
+  <h1>Welcome, Admin</h1>
+
+  <h2>Available APK Files:</h2>
+  <ul>
+    {% for apk in apk_files %}
+      <li>
+        {{ apk }} — <a href="/generate/{{ apk }}">Generate Password</a>
+      </li>
+    {% endfor %}
+  </ul>
+
+  <p><a href="/download">Go to Client Download Page</a></p>
+  <p><a href="/logout">Logout</a></p>
+</body>
+</html>

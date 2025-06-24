@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Enter Password to Download APK</title>
+</head>
+<body>
+  <h2>Enter Password to Download APK</h2>
+
+  {% if selected_file %}
+    <p>APK: <strong>{{ selected_file }}</strong></p>
+
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <ul style="color: red;">
+          {% for msg in messages %}
+            <li>{{ msg }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST">
+      <input type="hidden" name="file" value="{{ selected_file }}">
+      <input type="text" name="password" placeholder="Enter password" required>
+      <button type="submit">Download</button>
+    </form>
+
+    <p><a href="{{ url_for('download') }}">← Back to APK list</a></p>
+  
+  {% else %}
+    <h3>Available APKs:</h3>
+    <ul>
+      {% for apk in apk_files %}
+        <li><a href="{{ url_for('download', file=apk) }}">{{ apk }}</a></li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+</body>
+</html>
