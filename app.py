@@ -154,13 +154,13 @@ def custdb():
 
     # Fetch edit values from query parameters
     edit_customer = {
-        "id": request.args.get("id", ""),
-        "name": request.args.get("name", ""),
-        "mobile": request.args.get("mobile", ""),
-        "product": request.args.get("product", ""),
-        "date": request.args.get("date", ""),
-        "action": request.args.get("action", "add")
-    }
+    "id": request.args.get("id", ""),
+    "name": request.args.get("name", ""),  # Include this if you use name field
+    "mobile": request.args.get("mobile", ""),
+    "product": request.args.get("product", ""),
+    "date": request.args.get("purchase_date", ""),  # IMPORTANT FIX
+    "action": request.args.get("action", "add")
+}
 
     c.execute("SELECT * FROM customers")
     customers = c.fetchall()
