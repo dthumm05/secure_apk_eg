@@ -143,8 +143,8 @@ def custdb():
         date = request.form.get('date', '').strip()
 
         if mobile and product and date:
-            c.execute("INSERT INTO customers (mobile, product, date) VALUES (?, ?, ?)",
-                      (mobile, product, date))
+            c.execute("INSERT INTO customers (mobile, product, purchase_date) VALUES (?, ?, ?)",
+          (mobile, product, date))
             conn.commit()
         else:
             flash("All fields are required.")  # Only works if flash messages are shown in HTML
