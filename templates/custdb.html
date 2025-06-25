@@ -30,23 +30,20 @@
 </head>
 <body>
   <div class="content">
-    <h2>{% if request.form.get('action') == 'edit' %}Edit Customer{% else %}Add New Customer{% endif %}</h2>
-    
-    <!-- Unified form for Add/Edit -->
+    <h2>{{ 'Edit Customer' if edit_customer.action == 'edit' else 'Add New Customer' }}</h2>
+
     <form method="POST" class="form-section">
-      <input type="hidden" name="action" value="{{ 'edit' if request.form.get('action') == 'edit' else 'add' }}">
-      <input type="hidden" name="id" value="{{ request.form.get('id', '') }}">
+      <input type="hidden" name="action" value="{{ edit_customer.action }}">
+      <input type="hidden" name="id" value="{{ edit_customer.id }}">
       
       <input type="text" name="mobile" placeholder="Mobile Number" required
-             value="{{ request.form.get('mobile', '') }}"><br><br>
-             
+             value="{{ edit_customer.mobile }}"><br><br>
       <input type="text" name="product" placeholder="Product Purchased" required
-             value="{{ request.form.get('product', '') }}"><br><br>
-             
+             value="{{ edit_customer.product }}"><br><br>
       <input type="date" name="date" required
-             value="{{ request.form.get('date', '') }}"><br><br>
-             
-      <button type="submit">{{ 'Update' if request.form.get('action') == 'edit' else 'Add Customer' }}</button>
+             value="{{ edit_customer.date }}"><br><br>
+
+      <button type="submit">{{ 'Update' if edit_customer.action == 'edit' else 'Add Customer' }}</button>
     </form>
 
     <h2>Customer Records</h2>
@@ -65,17 +62,10 @@
         <td>{{ cust[2] }}</td>
         <td>{{ cust[3] }}</td>
         <td>
-          <!-- Edit: repopulates the form using POST -->
-          <form method="POST" style="display:inline;">
-            <input type="hidden" name="action" value="edit">
-            <input type="hidden" name="id" value="{{ cust[0] }}">
-            <input type="hidden" name="mobile" value="{{ cust[1] }}">
-            <input type="hidden" name="product" value="{{ cust[2] }}">
-            <input type="hidden" name="date" value="{{ cust[3] }}">
-            <button class="edit-btn" type="submit">Edit</button>
-          </form>
+          <a href="{{ url_for('custdb') }}?action=edit&id={{ cust[0] }}&mobile={{ cust[1] }}&product={{ cust[2] }}&date={{ cust[3] }}">
+            <button class="edit-btn" type="button">Edit</button>
+          </a>
 
-          <!-- Delete with JS confirmation -->
           <form method="POST" action="{{ url_for('delete_customer', customer_id=cust[0]) }}" style="display:inline;" onsubmit="return confirmDelete();">
             <button class="delete-btn" type="submit">Delete</button>
           </form>

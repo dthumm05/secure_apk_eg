@@ -24,19 +24,8 @@ def init_db():
 
 init_db()
 
-def load_tokens():
-    if not os.path.exists(TOKEN_FILE):
-        return {}
-    with open(TOKEN_FILE, 'r') as f:
-        return json.load(f)
-
-def save_tokens(tokens):
-    with open(TOKEN_FILE, 'w') as f:
-        json.dump(tokens, f)
-
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    # If already logged in, redirect to admin 
     if session.get('logged_in'):
         return redirect(url_for('home'))
 
@@ -54,7 +43,6 @@ def login():
 def logout():
     session.pop('logged_in', None)
     return redirect(url_for('login'))
-
 
 @app.route('/')
 def root():
@@ -84,14 +72,23 @@ def generate(filename):
         return "APK not found.", 404
 
     tokens = load_tokens()
-    password = secrets.token_hex(3)  # 6-character code
+    password = secrets.token_hex(3)
     tokens[password] = {
         'filename': filename,
-        'expires': time.time() + 300  # 5 minutes
+        'expires': time.time() + 300
     }
     save_tokens(tokens)
     return f"Password for <b>{filename}</b>: <b>{password}</b><br>Valid for 5 minutes.<br><a href='/'>Go Back</a>"
 
+def load_tokens():
+    if not os.path.exists(TOKEN_FILE):
+        return {}
+    with open(TOKEN_FILE, 'r') as f:
+        return json.load(f)
+
+def save_tokens(tokens):
+    with open(TOKEN_FILE, 'w') as f:
+        json.dump(tokens, f)
 
 @app.route('/download', methods=['GET', 'POST'])
 def download():
@@ -116,7 +113,6 @@ def download():
             flash("Invalid password.")
         return redirect(url_for('download', file=selected_file))
     
-    # GET request
     selected_file = request.args.get('file')
     return render_template('download.html', apk_files=apk_files, selected_file=selected_file)
 
@@ -125,17 +121,14 @@ def custdb():
     if not session.get('logged_in'):
         return redirect(url_for('login'))
 
-    conn = sqlite3.connect('customers.db')
+    conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
-
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS customers (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            mobile TEXT NOT NULL,
-            product TEXT NOT NULL,
-            purchase_date TEXT NOT NULL
-        )
-    ''')
+    c.execute('''CREATE TABLE IF NOT EXISTS customers (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        mobile TEXT NOT NULL,
+        product TEXT NOT NULL,
+        purchase_date TEXT NOT NULL
+    )''')
 
     if request.method == 'POST':
         action = request.form.get('action')
@@ -154,28 +147,33 @@ def custdb():
                 c.execute("UPDATE customers SET mobile = ?, product = ?, purchase_date = ? WHERE id = ?",
                           (mobile, product, date, cust_id))
                 conn.commit()
+        return redirect(url_for('custdb'))  # clear form after POST
 
-        conn.close()
-        return redirect(url_for('custdb')) 
+    # Fetch edit values from query parameters
+    edit_customer = {
+        "id": request.args.get("id", ""),
+        "mobile": request.args.get("mobile", ""),
+        "product": request.args.get("product", ""),
+        "date": request.args.get("date", ""),
+        "action": request.args.get("action", "add")
+    }
+
     c.execute("SELECT * FROM customers")
     customers = c.fetchall()
     conn.close()
 
-    return render_template('custdb.html', customers=customers)
-
-
+    return render_template('custdb.html', customers=customers, edit_customer=edit_customer)
 
 @app.route('/delete_customer/<int:customer_id>', methods=['POST'])
 def delete_customer(customer_id):
     if not session.get('logged_in'):
         return redirect(url_for('login'))
 
-    conn = sqlite3.connect('customers.db')
+    conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
     c.execute("DELETE FROM customers WHERE id = ?", (customer_id,))
     conn.commit()
     conn.close()
-
     return redirect(url_for('custdb'))
 
 if __name__ == "__main__":
