@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Customer Database</title>
+</head>
+<body>
+  <h2>Add New Customer</h2>
+  <form method="POST">
+    <input type="text" name="mobile" placeholder="Mobile Number" required><br><br>
+    <input type="text" name="product" placeholder="Product Purchased" required><br><br>
+    <input type="date" name="purchase_date" required><br><br>
+    <button type="submit">Add Customer</button>
+  </form>
+
+  <h2>Customer Records</h2>
+  <table border="1" cellpadding="10">
+    <tr>
+      <th>ID</th>
+      <th>Mobile</th>
+      <th>Product</th>
+      <th>Purchase Date</th>
+    </tr>
+    {% for cust in customers %}
+    <tr>
+      <td>{{ cust[0] }}</td>
+      <td>{{ cust[1] }}</td>
+      <td>{{ cust[2] }}</td>
+      <td>{{ cust[3] }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+
+  <br>
+  <a href="/admin">Back to Admin</a>
+</body>
+</html>
