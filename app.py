@@ -128,7 +128,6 @@ def custdb():
     conn = sqlite3.connect('customers.db')
     c = conn.cursor()
 
-    # Ensure table exists
     c.execute('''
         CREATE TABLE IF NOT EXISTS customers (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -156,11 +155,14 @@ def custdb():
                           (mobile, product, date, cust_id))
                 conn.commit()
 
+        conn.close()
+        return redirect(url_for('custdb')) 
     c.execute("SELECT * FROM customers")
     customers = c.fetchall()
     conn.close()
 
     return render_template('custdb.html', customers=customers)
+
 
 
 @app.route('/delete_customer/<int:customer_id>', methods=['POST'])
