@@ -15,6 +15,7 @@ def init_db():
     c = conn.cursor()
     c.execute('''CREATE TABLE IF NOT EXISTS customers (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT NOT NULL,
                     mobile TEXT NOT NULL,
                     product TEXT NOT NULL,
                     purchase_date TEXT NOT NULL
@@ -125,6 +126,7 @@ def custdb():
     c = conn.cursor()
     c.execute('''CREATE TABLE IF NOT EXISTS customers (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
         mobile TEXT NOT NULL,
         product TEXT NOT NULL,
         purchase_date TEXT NOT NULL
@@ -133,25 +135,27 @@ def custdb():
     if request.method == 'POST':
         action = request.form.get('action')
         mobile = request.form.get('mobile', '').strip()
+        name = request.form.get('name', '').strip()
         product = request.form.get('product', '').strip()
         date = request.form.get('date', '').strip()
 
         if action == 'add':
             if mobile and product and date:
-                c.execute("INSERT INTO customers (mobile, product, purchase_date) VALUES (?, ?, ?)",
-                          (mobile, product, date))
+                c.execute("INSERT INTO customers (name, mobile, product, purchase_date) VALUES (?, ?, ?, ?)",
+                          (name, mobile, product, date))
                 conn.commit()
         elif action == 'edit':
             cust_id = request.form.get('id')
             if cust_id and mobile and product and date:
-                c.execute("UPDATE customers SET mobile = ?, product = ?, purchase_date = ? WHERE id = ?",
-                          (mobile, product, date, cust_id))
+                c.execute("UPDATE customers SET name = ?, mobile = ?, product = ?, purchase_date = ? WHERE id = ?",
+                          (name, mobile, product, date, cust_id))
                 conn.commit()
         return redirect(url_for('custdb'))  # clear form after POST
 
     # Fetch edit values from query parameters
     edit_customer = {
         "id": request.args.get("id", ""),
+        "name": request.args.get("name", ""),
         "mobile": request.args.get("mobile", ""),
         "product": request.args.get("product", ""),
         "date": request.args.get("date", ""),

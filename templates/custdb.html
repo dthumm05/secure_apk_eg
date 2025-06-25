@@ -36,6 +36,8 @@
       <input type="hidden" name="action" value="{{ edit_customer.action }}">
       <input type="hidden" name="id" value="{{ edit_customer.id }}">
       
+      <input type="text" name="name" placeholder="Name" required
+             value="{{ edit_customer.name }}"><br><br>
       <input type="text" name="mobile" placeholder="Mobile Number" required
              value="{{ edit_customer.mobile }}"><br><br>
       <input type="text" name="product" placeholder="Product Purchased" required
@@ -50,6 +52,7 @@
     <table>
       <tr>
         <th>ID</th>
+        <th>Name</th>
         <th>Mobile</th>
         <th>Product</th>
         <th>Purchase Date</th>
