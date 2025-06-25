@@ -125,29 +125,36 @@ def custdb():
     if not session.get('logged_in'):
         return redirect(url_for('login'))
 
-    import sqlite3
     conn = sqlite3.connect('customers.db')
     c = conn.cursor()
 
-    # Create table if not exists
-    c.execute('''CREATE TABLE IF NOT EXISTS customers (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        mobile TEXT NOT NULL,
-        product TEXT NOT NULL,
-        date TEXT NOT NULL
-    )''')
+    # Ensure table exists
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS customers (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            mobile TEXT NOT NULL,
+            product TEXT NOT NULL,
+            purchase_date TEXT NOT NULL
+        )
+    ''')
 
     if request.method == 'POST':
+        action = request.form.get('action')
         mobile = request.form.get('mobile', '').strip()
         product = request.form.get('product', '').strip()
         date = request.form.get('date', '').strip()
 
-        if mobile and product and date:
-            c.execute("INSERT INTO customers (mobile, product, purchase_date) VALUES (?, ?, ?)",
-          (mobile, product, date))
-            conn.commit()
-        else:
-            flash("All fields are required.")  # Only works if flash messages are shown in HTML
+        if action == 'add':
+            if mobile and product and date:
+                c.execute("INSERT INTO customers (mobile, product, purchase_date) VALUES (?, ?, ?)",
+                          (mobile, product, date))
+                conn.commit()
+        elif action == 'edit':
+            cust_id = request.form.get('id')
+            if cust_id and mobile and product and date:
+                c.execute("UPDATE customers SET mobile = ?, product = ?, purchase_date = ? WHERE id = ?",
+                          (mobile, product, date, cust_id))
+                conn.commit()
 
     c.execute("SELECT * FROM customers")
     customers = c.fetchall()
@@ -155,9 +162,20 @@ def custdb():
 
     return render_template('custdb.html', customers=customers)
 
+
+@app.route('/delete_customer/<int:customer_id>', methods=['POST'])
+def delete_customer(customer_id):
+    if not session.get('logged_in'):
+        return redirect(url_for('login'))
+
+    conn = sqlite3.connect('customers.db')
+    c = conn.cursor()
+    c.execute("DELETE FROM customers WHERE id = ?", (customer_id,))
+    conn.commit()
+    conn.close()
+
+    return redirect(url_for('custdb'))
+
 if __name__ == "__main__":
     from waitress import serve
     serve(app, host="0.0.0.0", port=10000)
-
-# if __name__ == "__main__":
-#     app.run(debug=True)
