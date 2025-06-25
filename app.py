@@ -125,19 +125,30 @@ def custdb():
     if not session.get('logged_in'):
         return redirect(url_for('login'))
 
-    conn = sqlite3.connect(DB_FILE)
+    import sqlite3
+    conn = sqlite3.connect('customers.db')
     c = conn.cursor()
+
+    # Create table if not exists
+    c.execute('''CREATE TABLE IF NOT EXISTS customers (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        mobile TEXT NOT NULL,
+        product TEXT NOT NULL,
+        date TEXT NOT NULL
+    )''')
 
     if request.method == 'POST':
         mobile = request.form['mobile']
         product = request.form['product']
-        date = request.form['purchase_date']
-        c.execute("INSERT INTO customers (mobile, product, purchase_date) VALUES (?, ?, ?)", (mobile, product, date))
+        date = request.form['date']
+        c.execute("INSERT INTO customers (mobile, product, date) VALUES (?, ?, ?)",
+                  (mobile, product, date))
         conn.commit()
 
     c.execute("SELECT * FROM customers")
     customers = c.fetchall()
     conn.close()
+
     return render_template('custdb.html', customers=customers)
 
 if __name__ == "__main__":
