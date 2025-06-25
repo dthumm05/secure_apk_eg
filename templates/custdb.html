@@ -2,35 +2,79 @@
 <html>
 <head>
   <title>Customer Database</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+    }
+    .sidebar {
+      width: 200px;
+      background: #333;
+      color: white;
+      padding: 20px;
+      height: 100vh;
+    }
+    .sidebar h2 {
+      margin-top: 0;
+    }
+    .sidebar a {
+      color: white;
+      text-decoration: none;
+      display: block;
+      margin: 10px 0;
+    }
+    .content {
+      padding: 20px;
+      flex-grow: 1;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+    }
+    th, td {
+      border: 1px solid black;
+      padding: 10px;
+    }
+  </style>
 </head>
 <body>
-  <h2>Add New Customer</h2>
-  <form method="POST">
-    <input type="text" name="mobile" placeholder="Mobile Number" required><br><br>
-    <input type="text" name="product" placeholder="Product Purchased" required><br><br>
-    <input type="date" name="purchase_date" required><br><br>
-    <button type="submit">Add Customer</button>
-  </form>
 
-  <h2>Customer Records</h2>
-  <table border="1" cellpadding="10">
-    <tr>
-      <th>ID</th>
-      <th>Mobile</th>
-      <th>Product</th>
-      <th>Purchase Date</th>
-    </tr>
-    {% for cust in customers %}
-    <tr>
-      <td>{{ cust[0] }}</td>
-      <td>{{ cust[1] }}</td>
-      <td>{{ cust[2] }}</td>
-      <td>{{ cust[3] }}</td>
-    </tr>
-    {% endfor %}
-  </table>
+  <div class="sidebar">
+    <h2>Admin</h2>
+    <a href="{{ url_for('admin') }}">APK Downloads</a>
+    <a href="{{ url_for('custdb') }}">Customer Database</a>
+    <a href="{{ url_for('logout') }}">Logout</a>
+  </div>
 
-  <br>
-  <a href="{{ url_for('custdb') }}">Back to Admin</a>
+  <div class="content">
+    <h2>Add New Customer</h2>
+    <form method="POST">
+      <input type="text" name="mobile" placeholder="Mobile Number" required><br><br>
+      <input type="text" name="product" placeholder="Product Purchased" required><br><br>
+      <!-- FIXED: name="date" -->
+      <input type="date" name="date" required><br><br>
+      <button type="submit">Add Customer</button>
+    </form>
+
+    <h2>Customer Records</h2>
+    <table>
+      <tr>
+        <th>ID</th>
+        <th>Mobile</th>
+        <th>Product</th>
+        <th>Purchase Date</th>
+      </tr>
+      {% for cust in customers %}
+      <tr>
+        <td>{{ cust[0] }}</td>
+        <td>{{ cust[1] }}</td>
+        <td>{{ cust[2] }}</td>
+        <td>{{ cust[3] }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+
 </body>
 </html>

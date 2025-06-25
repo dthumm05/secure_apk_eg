@@ -138,12 +138,16 @@ def custdb():
     )''')
 
     if request.method == 'POST':
-        mobile = request.form['mobile']
-        product = request.form['product']
-        date = request.form['date']
-        c.execute("INSERT INTO customers (mobile, product, date) VALUES (?, ?, ?)",
-                  (mobile, product, date))
-        conn.commit()
+        mobile = request.form.get('mobile', '').strip()
+        product = request.form.get('product', '').strip()
+        date = request.form.get('date', '').strip()
+
+        if mobile and product and date:
+            c.execute("INSERT INTO customers (mobile, product, date) VALUES (?, ?, ?)",
+                      (mobile, product, date))
+            conn.commit()
+        else:
+            flash("All fields are required.")  # Only works if flash messages are shown in HTML
 
     c.execute("SELECT * FROM customers")
     customers = c.fetchall()
