@@ -181,17 +181,37 @@ def delete_customer(sno):
 def check_warranty():
     records = []
     searched = False
+
     if request.method == 'POST':
-        mobile = request.form.get('mobile')
+        sno = request.form.get('sno', '').strip()
+        mobile = request.form.get('mobile', '').strip()
+        name = request.form.get('name', '').strip()
         searched = True
+
+        query = "SELECT product, purchase_date, warranty FROM customers WHERE"
+        conditions = []
+        params = []
+
+        if sno:
+            conditions.append("sno = ?")
+            params.append(sno)
+        elif mobile:
+            conditions.append("mobile = ?")
+            params.append(mobile)
+        elif name:
+            conditions.append("name = ?")
+            params.append(name)
+        else:
+            return render_template("check_warranty.html", records=[], searched=searched)
+
         conn = sqlite3.connect(DB_FILE)
         conn.row_factory = sqlite3.Row
         c = conn.cursor()
-        c.execute("SELECT product, purchase_date, warranty FROM customers WHERE mobile = ?", (mobile,))
+        c.execute(f"{query} {' OR '.join(conditions)}", params)
         rows = c.fetchall()
+
         for row in rows:
             purchase_date = datetime.strptime(row['purchase_date'], '%Y-%m-%d')
-            # Custom warranty duration parser
             try:
                 val, unit = row['warranty'].split()
                 val = float(val)
@@ -199,12 +219,16 @@ def check_warranty():
             except:
                 warranty_days = 0
             is_valid = datetime.now() <= (purchase_date + timedelta(days=warranty_days))
+
             records.append({
                 'product': row['product'],
                 'purchase_date': row['purchase_date'],
                 'warranty': row['warranty'],
                 'warranty_valid': is_valid
             })
+
+        conn.close()
+
     return render_template('check_warranty.html', records=records, searched=searched)
 
 if __name__ == "__main__":
