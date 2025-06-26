@@ -129,44 +129,47 @@ def custdb():
         name TEXT NOT NULL,
         mobile TEXT NOT NULL,
         product TEXT NOT NULL,
-        purchase_date TEXT NOT NULL
+        purchase_date TEXT NOT NULL,
+        remark TEXT
     )''')
 
     if request.method == 'POST':
         action = request.form.get('action')
-        mobile = request.form.get('mobile', '').strip()
         name = request.form.get('name', '').strip()
+        mobile = request.form.get('mobile', '').strip()
         product = request.form.get('product', '').strip()
         date = request.form.get('date', '').strip()
+        remark = request.form.get('remark', '').strip()
 
         if action == 'add':
-            if mobile and product and date:
-                c.execute("INSERT INTO customers (name, mobile, product, purchase_date) VALUES (?, ?, ?, ?)",
-                          (name, mobile, product, date))
+            if name and mobile and product and date:
+                c.execute("INSERT INTO customers (name, mobile, product, purchase_date, remark) VALUES (?, ?, ?, ?, ?)",
+                          (name, mobile, product, date, remark))
                 conn.commit()
         elif action == 'edit':
             cust_id = request.form.get('id')
-            if cust_id and mobile and product and date:
-                c.execute("UPDATE customers SET name = ?, mobile = ?, product = ?, purchase_date = ? WHERE id = ?",
-                          (name, mobile, product, date, cust_id))
+            if cust_id and name and mobile and product and date:
+                c.execute("UPDATE customers SET name = ?, mobile = ?, product = ?, purchase_date = ?, remark = ? WHERE id = ?",
+                          (name, mobile, product, date, remark, cust_id))
                 conn.commit()
-        return redirect(url_for('custdb'))  # clear form after POST
+        return redirect(url_for('custdb'))
 
-    # Fetch edit values from query parameters
     edit_customer = {
-    "id": request.args.get("id", ""),
-    "name": request.args.get("name", ""),  # Include this if you use name field
-    "mobile": request.args.get("mobile", ""),
-    "product": request.args.get("product", ""),
-    "date": request.args.get("purchase_date", ""),  # IMPORTANT FIX
-    "action": request.args.get("action", "add")
-}
+        "id": request.args.get("id", ""),
+        "name": request.args.get("name", ""),
+        "mobile": request.args.get("mobile", ""),
+        "product": request.args.get("product", ""),
+        "date": request.args.get("date", ""),
+        "remark": request.args.get("remark", ""),
+        "action": request.args.get("action", "add")
+    }
 
     c.execute("SELECT * FROM customers")
     customers = c.fetchall()
     conn.close()
 
     return render_template('custdb.html', customers=customers, edit_customer=edit_customer)
+
 
 @app.route('/delete_customer/<int:customer_id>', methods=['POST'])
 def delete_customer(customer_id):

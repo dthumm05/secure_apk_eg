@@ -35,15 +35,21 @@
     <form method="POST" class="form-section">
       <input type="hidden" name="action" value="{{ edit_customer.action }}">
       <input type="hidden" name="id" value="{{ edit_customer.id }}">
-      
+
       <input type="text" name="name" placeholder="Name" required
              value="{{ edit_customer.name }}"><br><br>
+
       <input type="text" name="mobile" placeholder="Mobile Number" required
              value="{{ edit_customer.mobile }}"><br><br>
+
       <input type="text" name="product" placeholder="Product Purchased" required
              value="{{ edit_customer.product }}"><br><br>
+
       <input type="date" name="date" required
              value="{{ edit_customer.date }}"><br><br>
+
+      <input type="text" name="remark" placeholder="Remark"
+             value="{{ edit_customer.remark }}"><br><br>
 
       <button type="submit">{{ 'Update' if edit_customer.action == 'edit' else 'Add Customer' }}</button>
     </form>
@@ -51,21 +57,26 @@
     <h2>Customer Records</h2>
     <table>
       <tr>
+        <th>S.No.</th>
         <th>ID</th>
         <th>Name</th>
         <th>Mobile</th>
         <th>Product</th>
         <th>Purchase Date</th>
+        <th>Remark</th>
         <th>Actions</th>
       </tr>
       {% for cust in customers %}
       <tr>
+        <td>{{ loop.index }}</td>
         <td>{{ cust[0] }}</td>
         <td>{{ cust[1] }}</td>
         <td>{{ cust[2] }}</td>
         <td>{{ cust[3] }}</td>
+        <td>{{ cust[4] }}</td>
+        <td>{{ cust[5] }}</td>
         <td>
-          <a href="{{ url_for('custdb') }}?action=edit&id={{ cust[0] }}&name={{ cust[1] }}&mobile={{ cust[2] }}&product={{ cust[3] }}&purchase_date={{ cust[4] }}">
+          <a href="{{ url_for('custdb') }}?action=edit&id={{ cust[0] }}&name={{ cust[1] }}&mobile={{ cust[2] }}&product={{ cust[3] }}&date={{ cust[4] }}&remark={{ cust[5] }}">
             <button class="edit-btn" type="button">Edit</button>
           </a>
           <form method="POST" action="{{ url_for('delete_customer', customer_id=cust[0]) }}" style="display:inline;" onsubmit="return confirmDelete();">
