@@ -16,7 +16,7 @@ def init_db():
     c = conn.cursor()
     c.execute('''
         CREATE TABLE IF NOT EXISTS customers (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            sno TEXT PRIMARY KEY,
             name TEXT NOT NULL,
             mobile TEXT NOT NULL,
             product TEXT NOT NULL,
@@ -123,18 +123,10 @@ def custdb():
 
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
-    c.execute('''CREATE TABLE IF NOT EXISTS customers (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        mobile TEXT NOT NULL,
-        product TEXT NOT NULL,
-        purchase_date TEXT NOT NULL,
-        warranty TEXT NOT NULL,
-        remark TEXT
-    )''')
 
     if request.method == 'POST':
         action = request.form.get('action')
+        sno = request.form.get('sno', '').strip()
         name = request.form.get('name', '').strip()
         mobile = request.form.get('mobile', '').strip()
         product = request.form.get('product', '').strip()
@@ -143,20 +135,21 @@ def custdb():
         remark = request.form.get('remark', '').strip()
 
         if action == 'add':
-            if name and mobile and product and date:
-                c.execute("INSERT INTO customers (name, mobile, product, purchase_date, warranty, remark) VALUES (?, ?, ?, ?, ?, ?)",
-                          (name, mobile, product, date, warranty, remark))
+            if sno and name and mobile and product and date:
+                c.execute("INSERT INTO customers (sno, name, mobile, product, purchase_date, warranty, remark) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                          (sno, name, mobile, product, date, warranty, remark))
                 conn.commit()
         elif action == 'edit':
-            cust_id = request.form.get('id')
-            if cust_id and name and mobile and product and date:
-                c.execute("UPDATE customers SET name = ?, mobile = ?, product = ?, purchase_date = ?, warranty = ?, remark = ? WHERE id = ?",
-                          (name, mobile, product, date, warranty, remark, cust_id))
+            old_sno = request.form.get('id')
+            if old_sno and sno and name and mobile and product and date:
+                c.execute("UPDATE customers SET sno = ?, name = ?, mobile = ?, product = ?, purchase_date = ?, warranty = ?, remark = ? WHERE sno = ?",
+                          (sno, name, mobile, product, date, warranty, remark, old_sno))
                 conn.commit()
         return redirect(url_for('custdb'))
 
     edit_customer = {
         "id": request.args.get("id", ""),
+        "sno": request.args.get("id", ""),
         "name": request.args.get("name", ""),
         "mobile": request.args.get("mobile", ""),
         "product": request.args.get("product", ""),
@@ -172,14 +165,14 @@ def custdb():
 
     return render_template('custdb.html', customers=customers, edit_customer=edit_customer)
 
-@app.route('/delete_customer/<int:customer_id>', methods=['POST'])
-def delete_customer(customer_id):
+@app.route('/delete_customer/<sno>', methods=['POST'])
+def delete_customer(sno):
     if not session.get('logged_in'):
         return redirect(url_for('login'))
 
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
-    c.execute("DELETE FROM customers WHERE id = ?", (customer_id,))
+    c.execute("DELETE FROM customers WHERE sno = ?", (sno,))
     conn.commit()
     conn.close()
     return redirect(url_for('custdb'))
@@ -198,7 +191,13 @@ def check_warranty():
         rows = c.fetchall()
         for row in rows:
             purchase_date = datetime.strptime(row['purchase_date'], '%Y-%m-%d')
-            warranty_days = 182 if row['warranty'] == '6 months' else 365
+            # Custom warranty duration parser
+            try:
+                val, unit = row['warranty'].split()
+                val = float(val)
+                warranty_days = int(val * 30) if 'month' in unit else int(val * 365)
+            except:
+                warranty_days = 0
             is_valid = datetime.now() <= (purchase_date + timedelta(days=warranty_days))
             records.append({
                 'product': row['product'],
