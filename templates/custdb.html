@@ -48,6 +48,12 @@
       <input type="date" name="date" required
              value="{{ edit_customer.date }}"><br><br>
 
+      <label>Warranty:</label><br>
+      <select name="warranty" required>
+        <option value="1 year" {% if edit_customer.warranty == '1 year' %}selected{% endif %}>1 Year</option>
+        <option value="6 months" {% if edit_customer.warranty == '6 months' %}selected{% endif %}>6 Months</option>
+      </select><br><br>
+
       <input type="text" name="remark" placeholder="Remark"
              value="{{ edit_customer.remark }}"><br><br>
 
@@ -63,6 +69,7 @@
         <th>Mobile</th>
         <th>Product</th>
         <th>Purchase Date</th>
+        <th>Warranty</th>
         <th>Remark</th>
         <th>Actions</th>
       </tr>
@@ -75,8 +82,9 @@
         <td>{{ cust[3] }}</td>
         <td>{{ cust[4] }}</td>
         <td>{{ cust[5] }}</td>
+        <td>{{ cust[6] }}</td>
         <td>
-          <a href="{{ url_for('custdb') }}?action=edit&id={{ cust[0] }}&name={{ cust[1] }}&mobile={{ cust[2] }}&product={{ cust[3] }}&date={{ cust[4] }}&remark={{ cust[5] }}">
+          <a href="{{ url_for('custdb') }}?action=edit&id={{ cust[0] }}&name={{ cust[1] }}&mobile={{ cust[2] }}&product={{ cust[3] }}&date={{ cust[4] }}&warranty={{ cust[5] }}&remark={{ cust[6] }}">
             <button class="edit-btn" type="button">Edit</button>
           </a>
           <form method="POST" action="{{ url_for('delete_customer', customer_id=cust[0]) }}" style="display:inline;" onsubmit="return confirmDelete();">

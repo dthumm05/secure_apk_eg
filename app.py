@@ -1,5 +1,6 @@
 from flask import Flask, request, render_template, send_from_directory, redirect, url_for, flash, session
 import time, json, os, secrets, sqlite3
+from datetime import datetime, timedelta
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'fallback_secret')
@@ -8,7 +9,7 @@ TOKEN_FILE = 'tokens.json'
 APK_FOLDER = 'files'
 DB_FILE = 'customers.db'
 ADMIN_USERNAME = "admin"
-ADMIN_PASSWORD = "embonics@syslabs" 
+ADMIN_PASSWORD = "embonics@syslabs"
 
 def init_db():
     conn = sqlite3.connect(DB_FILE)
@@ -20,6 +21,7 @@ def init_db():
             mobile TEXT NOT NULL,
             product TEXT NOT NULL,
             purchase_date TEXT NOT NULL,
+            warranty TEXT NOT NULL,
             remark TEXT
         )
     ''')
@@ -50,9 +52,7 @@ def logout():
 
 @app.route('/')
 def root():
-    if not session.get('logged_in'):
-        return redirect(url_for('login'))
-    return redirect(url_for('admin'))
+    return redirect(url_for('admin')) if session.get('logged_in') else redirect(url_for('login'))
 
 @app.route('/admin')
 def admin():
@@ -85,10 +85,7 @@ def generate(filename):
     return f"Password for <b>{filename}</b>: <b>{password}</b><br>Valid for 5 minutes.<br><a href='/'>Go Back</a>"
 
 def load_tokens():
-    if not os.path.exists(TOKEN_FILE):
-        return {}
-    with open(TOKEN_FILE, 'r') as f:
-        return json.load(f)
+    return json.load(open(TOKEN_FILE)) if os.path.exists(TOKEN_FILE) else {}
 
 def save_tokens(tokens):
     with open(TOKEN_FILE, 'w') as f:
@@ -97,7 +94,7 @@ def save_tokens(tokens):
 @app.route('/download', methods=['GET', 'POST'])
 def download():
     apk_files = [f for f in os.listdir(APK_FOLDER) if f.endswith('.apk')]
-    
+
     if request.method == 'POST':
         password = request.form['password'].strip()
         selected_file = request.form['file']
@@ -116,9 +113,8 @@ def download():
         else:
             flash("Invalid password.")
         return redirect(url_for('download', file=selected_file))
-    
-    selected_file = request.args.get('file')
-    return render_template('download.html', apk_files=apk_files, selected_file=selected_file)
+
+    return render_template('download.html', apk_files=apk_files, selected_file=request.args.get('file'))
 
 @app.route('/custdb', methods=['GET', 'POST'])
 def custdb():
@@ -133,6 +129,7 @@ def custdb():
         mobile TEXT NOT NULL,
         product TEXT NOT NULL,
         purchase_date TEXT NOT NULL,
+        warranty TEXT NOT NULL,
         remark TEXT
     )''')
 
@@ -142,18 +139,19 @@ def custdb():
         mobile = request.form.get('mobile', '').strip()
         product = request.form.get('product', '').strip()
         date = request.form.get('date', '').strip()
+        warranty = request.form.get('warranty', '1 year')
         remark = request.form.get('remark', '').strip()
 
         if action == 'add':
             if name and mobile and product and date:
-                c.execute("INSERT INTO customers (name, mobile, product, purchase_date, remark) VALUES (?, ?, ?, ?, ?)",
-                          (name, mobile, product, date, remark))
+                c.execute("INSERT INTO customers (name, mobile, product, purchase_date, warranty, remark) VALUES (?, ?, ?, ?, ?, ?)",
+                          (name, mobile, product, date, warranty, remark))
                 conn.commit()
         elif action == 'edit':
             cust_id = request.form.get('id')
             if cust_id and name and mobile and product and date:
-                c.execute("UPDATE customers SET name = ?, mobile = ?, product = ?, purchase_date = ?, remark = ? WHERE id = ?",
-                          (name, mobile, product, date, remark, cust_id))
+                c.execute("UPDATE customers SET name = ?, mobile = ?, product = ?, purchase_date = ?, warranty = ?, remark = ? WHERE id = ?",
+                          (name, mobile, product, date, warranty, remark, cust_id))
                 conn.commit()
         return redirect(url_for('custdb'))
 
@@ -163,6 +161,7 @@ def custdb():
         "mobile": request.args.get("mobile", ""),
         "product": request.args.get("product", ""),
         "date": request.args.get("date", ""),
+        "warranty": request.args.get("warranty", "1 year"),
         "remark": request.args.get("remark", ""),
         "action": request.args.get("action", "add")
     }
@@ -172,7 +171,6 @@ def custdb():
     conn.close()
 
     return render_template('custdb.html', customers=customers, edit_customer=edit_customer)
-
 
 @app.route('/delete_customer/<int:customer_id>', methods=['POST'])
 def delete_customer(customer_id):
@@ -185,6 +183,39 @@ def delete_customer(customer_id):
     conn.commit()
     conn.close()
     return redirect(url_for('custdb'))
+
+@app.route('/check_warranty', methods=['GET', 'POST'])
+def check_warranty():
+    records = []
+    searched = False
+
+    if request.method == 'POST':
+        mobile = request.form.get('mobile', '').strip()
+        searched = True
+        if mobile:
+            conn = sqlite3.connect(DB_FILE)
+            conn.row_factory = sqlite3.Row
+            c = conn.cursor()
+            c.execute("SELECT product, purchase_date, warranty FROM customers WHERE mobile = ?", (mobile,))
+            data = c.fetchall()
+            conn.close()
+
+            for row in data:
+                purchase_date = datetime.strptime(row['purchase_date'], '%Y-%m-%d')
+                warranty_period = row['warranty']
+                if warranty_period == '6 months':
+                    expiry = purchase_date + timedelta(days=182)
+                else:
+                    expiry = purchase_date + timedelta(days=365)
+                warranty_valid = datetime.now() <= expiry
+                records.append({
+                    'product': row['product'],
+                    'purchase_date': row['purchase_date'],
+                    'warranty_valid': warranty_valid,
+                    'warranty_period': warranty_period
+                })
+
+    return render_template('check_warranty.html', records=records, searched=searched)
 
 if __name__ == "__main__":
     from waitress import serve
