@@ -13,13 +13,16 @@ ADMIN_PASSWORD = "embonics@syslabs"
 def init_db():
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
-    c.execute('''CREATE TABLE IF NOT EXISTS customers (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    name TEXT NOT NULL,
-                    mobile TEXT NOT NULL,
-                    product TEXT NOT NULL,
-                    purchase_date TEXT NOT NULL
-                )''')
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS customers (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            mobile TEXT NOT NULL,
+            product TEXT NOT NULL,
+            purchase_date TEXT NOT NULL,
+            remark TEXT
+        )
+    ''')
     conn.commit()
     conn.close()
 
