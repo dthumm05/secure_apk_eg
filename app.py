@@ -12,7 +12,7 @@ ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "embonics@syslabs"
 
 def init_db():
-    conn = sqlite3.connect(DB_FILE)
+    conn = sqlite3.connect(customers.db)
     c = conn.cursor()
     c.execute('''
         CREATE TABLE IF NOT EXISTS customers (
