@@ -26,6 +26,13 @@
     .form-section {
       margin-bottom: 30px;
     }
+    input, select {
+      padding: 8px;
+      width: 300px;
+    }
+    button {
+      padding: 10px 20px;
+    }
   </style>
 </head>
 <body>
@@ -84,7 +91,7 @@
         <td>{{ cust[5] }}</td>
         <td>{{ cust[6] }}</td>
         <td>
-          <a href="{{ url_for('custdb') }}?action=edit&id={{ cust[0] }}&name={{ cust[1] }}&mobile={{ cust[2] }}&product={{ cust[3] }}&date={{ cust[4] }}&warranty={{ cust[5] }}&remark={{ cust[6] }}">
+          <a href="{{ url_for('custdb') }}?action=edit&id={{ cust[0] }}&name={{ cust[1]|urlencode }}&mobile={{ cust[2]|urlencode }}&product={{ cust[3]|urlencode }}&date={{ cust[4] }}&warranty={{ cust[5]|urlencode }}&remark={{ cust[6]|urlencode }}">
             <button class="edit-btn" type="button">Edit</button>
           </a>
           <form method="POST" action="{{ url_for('delete_customer', customer_id=cust[0]) }}" style="display:inline;" onsubmit="return confirmDelete();">

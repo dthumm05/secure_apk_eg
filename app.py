@@ -188,33 +188,24 @@ def delete_customer(customer_id):
 def check_warranty():
     records = []
     searched = False
-
     if request.method == 'POST':
-        mobile = request.form.get('mobile', '').strip()
+        mobile = request.form.get('mobile')
         searched = True
-        if mobile:
-            conn = sqlite3.connect(DB_FILE)
-            conn.row_factory = sqlite3.Row
-            c = conn.cursor()
-            c.execute("SELECT product, purchase_date, warranty FROM customers WHERE mobile = ?", (mobile,))
-            data = c.fetchall()
-            conn.close()
-
-            for row in data:
-                purchase_date = datetime.strptime(row['purchase_date'], '%Y-%m-%d')
-                warranty_period = row['warranty']
-                if warranty_period == '6 months':
-                    expiry = purchase_date + timedelta(days=182)
-                else:
-                    expiry = purchase_date + timedelta(days=365)
-                warranty_valid = datetime.now() <= expiry
-                records.append({
-                    'product': row['product'],
-                    'purchase_date': row['purchase_date'],
-                    'warranty_valid': warranty_valid,
-                    'warranty_period': warranty_period
-                })
-
+        conn = sqlite3.connect(DB_FILE)
+        conn.row_factory = sqlite3.Row
+        c = conn.cursor()
+        c.execute("SELECT product, purchase_date, warranty FROM customers WHERE mobile = ?", (mobile,))
+        rows = c.fetchall()
+        for row in rows:
+            purchase_date = datetime.strptime(row['purchase_date'], '%Y-%m-%d')
+            warranty_days = 182 if row['warranty'] == '6 months' else 365
+            is_valid = datetime.now() <= (purchase_date + timedelta(days=warranty_days))
+            records.append({
+                'product': row['product'],
+                'purchase_date': row['purchase_date'],
+                'warranty': row['warranty'],
+                'warranty_valid': is_valid
+            })
     return render_template('check_warranty.html', records=records, searched=searched)
 
 if __name__ == "__main__":
