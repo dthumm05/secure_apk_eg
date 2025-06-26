@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Check Warranty</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      max-width: 800px;
+      margin: auto;
+    }
+    input[type="text"] {
+      padding: 10px;
+      width: 250px;
+    }
+    button {
+      padding: 10px 20px;
+    }
+    table {
+      margin-top: 20px;
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      border: 1px solid #000;
+      padding: 10px;
+      text-align: left;
+    }
+  </style>
+</head>
+<body>
+  <h2>Check Your Product Warranty</h2>
+  <form method="POST">
+    <label>Enter your mobile number:</label><br><br>
+    <input type="text" name="mobile" required>
+    <button type="submit">Check Warranty</button>
+  </form>
+
+  {% if records %}
+    <h3>Warranty Details:</h3>
+    <table>
+      <tr>
+        <th>Product</th>
+        <th>Purchase Date</th>
+        <th>Warranty Period</th>
+        <th>Warranty Status</th>
+      </tr>
+      {% for row in records %}
+      <tr>
+        <td>{{ row['product'] }}</td>
+        <td>{{ row['purchase_date'] }}</td>
+        <td>{{ row['warranty_period'] }}</td>
+        <td>{{ 'Valid' if row['warranty_valid'] else 'Expired' }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  {% elif searched %}
+    <p>No records found for this number.</p>
+  {% endif %}
+</body>
+</html>
