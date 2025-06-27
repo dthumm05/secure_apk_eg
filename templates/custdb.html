@@ -41,6 +41,7 @@
 
     <form method="POST" class="form-section">
       <input type="hidden" name="action" value="{{ edit_customer.action }}">
+      <input type="hidden" name="id" value="{{ edit_customer.sno }}">
 
       <input type="text" name="sno" placeholder="S.No." required
              value="{{ edit_customer.sno }}"><br><br>
@@ -58,16 +59,20 @@
              value="{{ edit_customer.date }}"><br><br>
 
       <label>Warranty:</label><br>
-      <select name="warranty" id="warrantySelect" required onchange="toggleCustomWarranty()">
-        <option value="1 year" {% if edit_customer.warranty == '1 year' %}selected{% endif %}>1 Year</option>
-        <option value="6 months" {% if edit_customer.warranty == '6 months' %}selected{% endif %}>6 Months</option>
-        <option value="custom" {% if edit_customer.warranty not in ['1 year', '6 months'] %}selected{% endif %}>Custom</option>
-      </select><br><br>
+        <select id="warrantySelect" required onchange="toggleCustomWarranty()">
+          <option value="1 year" {% if edit_customer.warranty == '1 year' %}selected{% endif %}>1 Year</option>
+          <option value="6 months" {% if edit_customer.warranty == '6 months' %}selected{% endif %}>6 Months</option>
+          <option value="custom" {% if edit_customer.warranty not in ['1 year', '6 months'] %}selected{% endif %}>Custom</option>
+        </select><br><br>
 
-      <div id="customWarrantyDiv" style="display: none;">
-        <input type="text" id="customWarrantyInput" placeholder="Enter custom warranty">
-        <br><br>
-      </div>
+        <div id="customWarrantyDiv" style="display: none;">
+          <input type="text" id="customWarrantyInput" placeholder="Enter custom warranty">
+          <br><br>
+        </div>
+
+        <!-- Hidden actual warranty input -->
+        <input type="hidden" name="warranty" id="finalWarranty">
+
 
       <input type="text" name="remark" placeholder="Remark"
              value="{{ edit_customer.remark }}"><br><br>
@@ -100,7 +105,7 @@
           <a href="{{ url_for('custdb') }}?action=edit&sno={{ cust[0]|urlencode }}&name={{ cust[1]|urlencode }}&mobile={{ cust[2]|urlencode }}&product={{ cust[3]|urlencode }}&date={{ cust[4] }}&warranty={{ cust[5]|urlencode }}&remark={{ cust[6]|urlencode }}">
             <button class="edit-btn" type="button">Edit</button>
           </a>
-          <form method="POST" action="{{ url_for('delete_customer', customer_sno=cust[0]) }}" style="display:inline;" onsubmit="return confirmDelete();">
+          <form method="POST" action="{{ url_for('delete_customer', sno=cust[0]) }}" style="display:inline;" onsubmit="return confirmDelete();">
             <button class="delete-btn" type="submit">Delete</button>
           </form>
         </td>
@@ -120,22 +125,33 @@
 
         if (select.value === 'custom') {
           customDiv.style.display = 'block';
-          customInput.setAttribute('name', 'warranty');
         } else {
           customDiv.style.display = 'none';
-          customInput.removeAttribute('name');
         }
       }
 
       document.addEventListener('DOMContentLoaded', function () {
         const select = document.getElementById('warrantySelect');
         const customInput = document.getElementById('customWarrantyInput');
-        const editWarranty = "{{ edit_customer.warranty }}";
-        if (editWarranty !== '1 year' && editWarranty !== '6 months') {
+        const finalWarranty = document.getElementById('finalWarranty');
+
+        const current = "{{ edit_customer.warranty }}";
+        if (current !== '1 year' && current !== '6 months') {
           select.value = 'custom';
-          customInput.value = editWarranty;
+          customInput.value = current;
+          customInput.setAttribute('name', 'warranty');
         }
+
         toggleCustomWarranty();
+
+      // Submit handler to set the final warranty value
+        document.querySelector('form').addEventListener('submit', function () {
+          if (select.value === 'custom') {
+            finalWarranty.value = customInput.value.trim();
+          } else {
+            finalWarranty.value = select.value;
+          }
+        });
       });
     </script>
   </div>

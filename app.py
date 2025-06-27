@@ -36,7 +36,7 @@ def login():
         return redirect(url_for('home'))
 
     if request.method == 'POST':
-        user = request.form['username']
+        user = request.form['username'].strip().lower()
         pwd = request.form['password']
         if user == ADMIN_USERNAME and pwd == ADMIN_PASSWORD:
             session['logged_in'] = True
@@ -136,20 +136,36 @@ def custdb():
 
         if action == 'add':
             if sno and name and mobile and product and date:
-                c.execute("INSERT INTO customers (sno, name, mobile, product, purchase_date, warranty, remark) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                          (sno, name, mobile, product, date, warranty, remark))
-                conn.commit()
+                # Check if sno already exists
+                c.execute("SELECT sno FROM customers WHERE sno = ?", (sno,))
+                if c.fetchone():
+                    flash(f"Customer with S.No. {sno} already exists.")
+                else:
+                    c.execute("INSERT INTO customers (sno, name, mobile, product, purchase_date, warranty, remark) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                            (sno, name, mobile, product, date, warranty, remark))
+                    conn.commit()
         elif action == 'edit':
             old_sno = request.form.get('id')
+
+            if sno != old_sno:
+                c.execute("SELECT sno FROM customers WHERE sno = ?", (sno,))
+                if c.fetchone():
+                    flash(f"S.No. {sno} is already taken.")
+                    return redirect(url_for('custdb'))
+
             if old_sno and sno and name and mobile and product and date:
-                c.execute("UPDATE customers SET sno = ?, name = ?, mobile = ?, product = ?, purchase_date = ?, warranty = ?, remark = ? WHERE sno = ?",
-                          (sno, name, mobile, product, date, warranty, remark, old_sno))
+                c.execute("""
+                          UPDATE customers 
+                          SET sno = ?, name = ?, mobile = ?, product = ?, purchase_date = ?, warranty = ?, remark = ? 
+                          WHERE sno = ?""",
+                        (sno, name, mobile, product, date, warranty, remark, old_sno))
                 conn.commit()
-        return redirect(url_for('custdb'))
+
+            return redirect(url_for('custdb'))
 
     edit_customer = {
         "id": request.args.get("id", ""),
-        "sno": request.args.get("id", ""),
+        "sno": request.args.get("sno", ""),
         "name": request.args.get("name", ""),
         "mobile": request.args.get("mobile", ""),
         "product": request.args.get("product", ""),
@@ -188,7 +204,7 @@ def check_warranty():
         name = request.form.get('name', '').strip()
         searched = True
 
-        query = "SELECT product, purchase_date, warranty FROM customers WHERE"
+        query = "SELECT sno, name, mobile, product, purchase_date, warranty FROM customers WHERE"
         conditions = []
         params = []
 
@@ -221,6 +237,9 @@ def check_warranty():
             is_valid = datetime.now() <= (purchase_date + timedelta(days=warranty_days))
 
             records.append({
+                'sno': row['sno'],
+                'name': row['name'],
+                'mobile': row['mobile'],
                 'product': row['product'],
                 'purchase_date': row['purchase_date'],
                 'warranty': row['warranty'],
@@ -234,3 +253,6 @@ def check_warranty():
 if __name__ == "__main__":
     from waitress import serve
     serve(app, host="0.0.0.0", port=10000)
+
+# if __name__ == "__main__":
+#     app.run(debug=True)

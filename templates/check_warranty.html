@@ -43,6 +43,9 @@
     <h3>Warranty Details:</h3>
     <table>
       <tr>
+        <th>S.No.</th>
+        <th>Name</th>
+        <th>Mobile</th>
         <th>Product</th>
         <th>Purchase Date</th>
         <th>Warranty Period</th>
@@ -50,6 +53,9 @@
       </tr>
       {% for row in records %}
       <tr>
+        <td>{{ row['sno'] }}</td>
+        <td>{{ row['name'] }}</td>
+        <td>{{ row['mobile'] }}</td>
         <td>{{ row['product'] }}</td>
         <td>{{ row['purchase_date'] }}</td>
         <td>{{ row['warranty'] }}</td>
